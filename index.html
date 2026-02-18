@@ -37,7 +37,8 @@
       <div id="g_id_onload"
          data-client_id="340428423135-3ja9dush1d6bj297v23oru8g0b4g8sk7.apps.googleusercontent.com" 
          data-callback="handleCredentialResponse"
-         data-auto_prompt="false">
+         data-auto_prompt="true"
+         data-cancel_on_tap_outside="false">
       </div>
       <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="filled_blue" data-text="signin_with" data-size="large"></div>
     </div>
@@ -49,6 +50,7 @@
         <span id="user-name" class="fw-bold" style="font-size: 0.8rem;">User</span>
         <small id="user-email" class="text-muted" style="font-size: 0.7rem;"></small>
       </div>
+      <button onclick="signOut()" class="btn btn-sm btn-link text-muted ms-2 p-0" title="Выйти" style="font-size: 0.8rem;">✕</button>
     </div>
   </header>
 
@@ -98,13 +100,31 @@
   window.onload = function() {
     modal = new bootstrap.Modal(document.getElementById('orderModal'));
     loadProducts();
+    // Восстановить сессию из localStorage
+    const saved = localStorage.getItem('smartstore_user');
+    if (saved) {
+      try {
+        const user = JSON.parse(saved);
+        // Проверяем, что данные не протухли (JWT живёт ~1 час, но данные профиля храним 7 дней)
+        if (user && user.email && user.savedAt && (Date.now() - user.savedAt < 7 * 24 * 60 * 60 * 1000)) {
+          applyUser(user);
+        } else {
+          localStorage.removeItem('smartstore_user');
+        }
+      } catch(e) { localStorage.removeItem('smartstore_user'); }
+    }
   };
 
   // --- 1. АВТОРИЗАЦИЯ ---
   function handleCredentialResponse(response) {
     const payload = decodeJwtResponse(response.credential);
-    currentUser = { email: payload.email, name: payload.name, picture: payload.picture };
-    
+    const user = { email: payload.email, name: payload.name, picture: payload.picture, savedAt: Date.now() };
+    localStorage.setItem('smartstore_user', JSON.stringify(user));
+    applyUser(user);
+  }
+
+  function applyUser(user) {
+    currentUser = user;
     document.getElementById('auth-zone').classList.add('d-none');
     document.getElementById('profile-zone').classList.remove('d-none');
     document.getElementById('profile-zone').classList.add('d-flex');
@@ -113,6 +133,11 @@
     document.getElementById('user-avatar').src = currentUser.picture;
     document.getElementById('custName').value = currentUser.name;
     document.querySelectorAll('.auth-only').forEach(el => el.classList.remove('auth-only'));
+  }
+
+  function signOut() {
+    localStorage.removeItem('smartstore_user');
+    location.reload();
   }
 
   function decodeJwtResponse(token) {
