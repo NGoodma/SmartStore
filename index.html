@@ -10,7 +10,7 @@
   <script>
     // ================= НАСТРОЙКИ =================
     // Сюда вставь ссылку, которую дал Google Apps Script (заканчивается на /exec)
-    const API_URL = "https://script.google.com/macros/s/AKfycbwyvKbWO6hiTKLptaMU-UUJuzCO_OSsnxIl9HUZDDzASGfu8ztpfEpx1tm9p5U-oA_R/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyjZrFeE6acJFgZnhlz4bGYlMT01InPy3p99qWYsNm2sgJYWl5PY7xPcFvIcD09IGTE/exec";
     // =============================================
   </script>
 
@@ -203,7 +203,8 @@
     // ВАЖНО: mode: 'no-cors' не используем, GAS умеет в перенаправления
     fetch(API_URL, {
       method: 'POST',
-      body: JSON.stringify(payload) // Отправляем как строку
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
     })
     .then(res => res.json())
     .then(result => {
@@ -230,6 +231,7 @@
 
     fetch(API_URL, {
       method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
         action: 'getMyOrders',
         email: currentUser.email
